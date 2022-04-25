@@ -1,0 +1,43 @@
+<a href="#" onclick="$('#reqDivID').slideDown();$('#reqDivResultID').hide();return false;">Задать вопрос по этому товару</a>
+<div style="display:none;" id="reqDivID">
+	<form method="post" action="">
+	Ваш E-mail:<br /><input type="text" name="email" id="req_emailID" value="" size="40" /><br />
+	Ваш вопрос:<br /><textarea name="question" id="req_questionID" cols="50" rows="5"></textarea><br />
+	{$wa->captcha()}
+	<input type="button" value="Отправить" id="req_sendID" onclick="sendQuestion();" />
+	</form>
+</div>
+<div id="reqDivResultID" style="display:none;">Спасибо! Ваш вопрос поступил в обработку, ожидайте ответа на емейл "<span id="req_emailSpanID"></span>"</div>
+
+{literal}
+<script type="text/javascript">
+function sendQuestion(){
+
+			$('#req_sendID').attr('disabled',true);
+
+			$.getJSON('?plugin=productdetailsrequest&action=send', 
+				{ 'captcha': $('#reqDivID').find('.wa-captcha-input').val(), 'email': $('#req_emailID').val(), 'question': $('#req_questionID').val(), 'productID': {/literal}{$product.id}{literal} }, function(r) {
+				if (r.status == 'ok') {
+					if(r.data.error!=''){
+						if(r.data.error=='email'){ alert('Необходимо указать правильный e-mail адрес!'); }
+						if(r.data.error=='question'){ alert('Необходимо указать ваш вопрос!'); }
+						if(r.data.error=='captcha'){ alert('Необходимо правильно ввести капчу!'); }
+					} else {
+						$('#reqDivID').hide();
+						$('#reqDivID').find('.wa-captcha-refresh').click(); 
+						$('#req_emailSpanID').html(r.data.email);
+						$('#reqDivResultID').show();
+					}
+					$('#req_sendID').attr('disabled',false);
+					
+				} else if (console) {
+					if (r.errors) {
+						console.error(r.errors);
+					} else if (r) {
+						console.error(r);
+					}
+				}
+			});
+}
+</script>
+{/literal}
